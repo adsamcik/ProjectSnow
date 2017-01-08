@@ -87,23 +87,24 @@
 					half4 snowNormal = tex2D(_SnowNormal, IN.uv_Snow);
 					a += _Threshold / 2;
 					a = a < 1 ? a : 1;
-					if (ny < 0.5) {
-						float lerpValue = (ny - 0.3) * 5;
+					if (ny <= 0.5) {
+						if (diff < -0.25)
+							diff = -0.25;
+						float lerpValue = (ny - 0.3) * 5 * (-diff * 4);
 						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Smoothness = lerp(mixedDiffuse.a, 0, lerpValue);
+						o.Smoothness = 0;
 					} else if (diff > -0.25) {
 						if (_Threshold >= 0.75) {
 							float val = -0.25 * (_Threshold - 0.75) * 4;
-							if(diff > val)
+							if (diff > val)
 								diff = val;
 						}
 						float lerpValue = -(diff * 4);
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-						o.Normal = snowNormal;
-						o.Normal = snowNormal;
+						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = lerp(mixedDiffuse.a, 0, lerpValue);
 					} else {
 						o.Albedo = snow;
