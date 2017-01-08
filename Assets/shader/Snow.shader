@@ -24,6 +24,8 @@ Shader "Custom/Snow" {
 			sampler2D _HeightMap;
 			sampler2D _Snow;
 
+			fixed4 _Color;
+
 			float _Threshold;
 
 			struct Input {
@@ -32,14 +34,12 @@ Shader "Custom/Snow" {
 				float2 uv_Snow;
 			};
 
-			fixed4 _Color;
-
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				//fixed4 c = tex2D(_MainTex, IN.uv_MainTex) + tex2D(_MainTex, IN.uv_MainTex) * _Color;
 				//o.Albedo = c.rgb;
 				float3 wn = WorldNormalVector(IN, o.Normal);
-				fixed4 c = tex2D(_MainTex, IN.uv_MainTex);
+				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
 				fixed4 h = tex2D(_HeightMap, IN.uv_HeightMap);
 				fixed4 s = tex2D(_Snow, IN.uv_Snow);
 				float a = h.r;
