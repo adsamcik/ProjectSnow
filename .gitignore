@@ -79,3 +79,10 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+Assets/3rd party*
+Assets/Standard Assets/*
+*.mat*
+*.meta
+*.unity
+*.asset
