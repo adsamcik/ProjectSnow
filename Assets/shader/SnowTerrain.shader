@@ -2,17 +2,18 @@
 	Properties{
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
 		_Snow("Snow", 2D) = "white" {}
+		_SnowNormal("Snow Normal", 2D) = "bump" {}
 	// set by terrain engine
 	[HideInInspector] _Control("Control (RGBA)", 2D) = "red" {}
-[HideInInspector] _Splat3("Layer 3 (A)", 2D) = "white" {}
-[HideInInspector] _Splat2("Layer 2 (B)", 2D) = "white" {}
-[HideInInspector] _Splat1("Layer 1 (G)", 2D) = "white" {}
-[HideInInspector] _Splat0("Layer 0 (R)", 2D) = "white" {}
-[HideInInspector] _Normal3("Normal 3 (A)", 2D) = "bump" {}
-[HideInInspector] _Normal2("Normal 2 (B)", 2D) = "bump" {}
-[HideInInspector] _Normal1("Normal 1 (G)", 2D) = "bump" {}
-[HideInInspector] _Normal0("Normal 0 (R)", 2D) = "bump" {}
-[HideInInspector][Gamma] _Metallic0("Metallic 0", Range(0.0, 1.0)) = 0.0
+	[HideInInspector] _Splat3("Layer 3 (A)", 2D) = "white" {}
+	[HideInInspector] _Splat2("Layer 2 (B)", 2D) = "white" {}
+	[HideInInspector] _Splat1("Layer 1 (G)", 2D) = "white" {}
+	[HideInInspector] _Splat0("Layer 0 (R)", 2D) = "white" {}
+	[HideInInspector] _Normal3("Normal 3 (A)", 2D) = "bump" {}
+	[HideInInspector] _Normal2("Normal 2 (B)", 2D) = "bump" {}
+	[HideInInspector] _Normal1("Normal 1 (G)", 2D) = "bump" {}
+	[HideInInspector] _Normal0("Normal 0 (R)", 2D) = "bump" {}
+	[HideInInspector][Gamma] _Metallic0("Metallic 0", Range(0.0, 1.0)) = 0.0
 	[HideInInspector][Gamma] _Metallic1("Metallic 1", Range(0.0, 1.0)) = 0.0
 	[HideInInspector][Gamma] _Metallic2("Metallic 2", Range(0.0, 1.0)) = 0.0
 	[HideInInspector][Gamma] _Metallic3("Metallic 3", Range(0.0, 1.0)) = 0.0
@@ -61,13 +62,13 @@
 	float _Threshold;
 
 	sampler2D _Snow;
+	sampler2D _SnowNormal;
 
 	void surf(Input IN, inout SurfaceOutputStandard o) {
 		half4 splat_control;
 		half weight;
 		fixed4 mixedDiffuse;
 		half4 defaultSmoothness = half4(_Smoothness0, _Smoothness1, _Smoothness2, _Smoothness3);
-		half4 snow = tex2D(_Snow, IN.uv_Snow);
 		SplatmapMix(IN, defaultSmoothness, splat_control, weight, mixedDiffuse, o.Normal);
 		//o.Albedo = mixedDiffuse.rgb;
 		o.Alpha = weight;
@@ -76,26 +77,27 @@
 		float3 wn = WorldNormalVector(IN, float3(0, 0, 1));
 		float ny = wn.y;
 
-		float a = mixedDiffuse.a;
+		float a = 1 - mixedDiffuse.a;
 
-		float diff = 1 - _Threshold - (1 - a);
+		float diff = 1 - _Threshold - a;
 		if (diff >= 0 || ny < 0.3) {
 			o.Albedo = mixedDiffuse.rgb;
-			o.Smoothness = mixedDiffuse.a;
 		} else {
+			half4 snow = tex2D(_Snow, IN.uv_Snow);
+			half4 snowNormal = tex2D(_SnowNormal, IN.uv_Snow);
 			a += _Threshold / 2;
 			a = a < 1 ? a : 1;
 			if (ny < 0.5) {
 				float lerpValue = (ny - 0.3) * 5;
 				o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-				o.Normal = lerp(o.Normal, 1, lerpValue);
-			} else if (diff > -0.05 && _Threshold != 1) {
-				float lerpValue = -(diff * 20);
+				o.Normal = lerp(o.Normal, snowNormal, lerpValue);
+			} else if (diff > -0.1 && _Threshold != 1) {
+				float lerpValue = -(diff * 10);
 				o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-				o.Normal = lerp(o.Normal, 1, lerpValue);
+				o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 			} else {
 				o.Albedo = snow;
-				o.Normal = 1;
+				o.Normal = snowNormal;
 			}
 		}
 	}
