@@ -77,7 +77,7 @@ Shader "Snow/Snow" {
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
-						o.Metallic = lerp(o.Metallic, 0, lerpValue);
+						o.Metallic = lerp(o.Metallic, o.Normal.b, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
