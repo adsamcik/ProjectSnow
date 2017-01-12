@@ -80,7 +80,7 @@
 				o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_MainTex));
 
 				float a = tex2D(_DispTex, IN.uv_MainTex).r;
-				float diff = _Threshold - a;
+				float diff = _Threshold * 1.1 - a;
 				float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
 				if (diff >= 0 && _Threshold != 0) {
 					a += _Threshold / 2;
@@ -92,7 +92,7 @@
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = 0;
-					} else*/ if (diff > 0 && _Threshold != 1) {
+					} else*/ if (diff > 0) {
 						float lerpValue;
 						if (_Threshold >= 0.75) {
 							float val = 1 + (_Threshold - 0.75) * 4;
