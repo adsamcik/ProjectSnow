@@ -37,6 +37,8 @@ Shader "Snow/Snow" {
 
 			struct Input {
 				float2 uv_MainTex;
+				float2 uv_Normal;
+				float3 worldNormal;
 				INTERNAL_DATA
 			};
 
@@ -47,22 +49,17 @@ Shader "Snow/Snow" {
 				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
 				fixed4 h = tex2D(_HeightMap, IN.uv_MainTex);
 				o.Smoothness = c.a;
-				o.Normal = tex2D(_MainTexNormal, IN.uv_MainTex);
-				float3 wn = WorldNormalVector(IN, o.Normal);
+				o.Normal = UnpackNormal(tex2D(_MainTexNormal, IN.uv_Normal));
+				o.Metallic = o.Normal.r;
+				float3 wn = WorldNormalVector(IN, float3(0, 0, 1));
 				float a = h.r;
 				float diff = _Threshold * 1.1 - a;
-				float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
-				if (diff >= 0 && _Threshold != 0) {
+				if (diff >= 0 && _Threshold != 0 && wn.y >= 0.25) {
+					float modifier = (wn.y <= 0.5) ? (wn.y - 0.25) * 4 : 1;
 					a += _Threshold / 2;
 					a = a < 1 ? a : 1;
-					if (wn.y > 0.5) {
-						if (diff < -0.25)
-							diff = -0.25;
-						float lerpValue = (wn.y - 0.3) * 5 * (-diff * 4);
-						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Smoothness = 0;
-					} else if (diff > 0) {
+					diff *= modifier;
+					if (diff > 0) {
 						float lerpValue;
 						if (_Threshold >= 0.75) {
 							float val = 1 + (_Threshold - 0.75) * 4;
@@ -74,12 +71,12 @@ Shader "Snow/Snow" {
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
-						o.Metallic = lerp(o.Metallic, 0, lerpValue);
+						o.Metallic = lerp(o.Metallic, 1, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
-						o.Smoothness = 0;
-						o.Metallic = 0;
+						o.Smoothness = 1;
+						o.Metallic = 1;
 					}
 				} else {
 					o.Albedo = c.rgb;
