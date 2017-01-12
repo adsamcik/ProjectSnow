@@ -2,7 +2,7 @@
 	Properties{
 		_Tess("Tessellation", Range(1,32)) = 4
 		_MainTex("Base (RGB)", 2D) = "white" {}
-		_DispTex("Disp Texture", 2D) = "gray" {}
+		_DispTex("Displacement Texture", 2D) = "gray" {}
 		_NormalMap("Normalmap", 2D) = "bump" {}
 		_Displacement("Displacement", Range(0, 1.0)) = 0.3
 		_DispOffset("Disp Offset", Range(0, 1)) = 0.5
@@ -10,8 +10,9 @@
 		_SpecPow("Metallic", Range(0, 1)) = 0.5
 		_GlossPow("Smoothness", Range(0, 1)) = 0.5
 		_Snow("Snow", 2D) = "white" {}
-		_SnowNormal("SnowNormal (A)", 2D) = "bump" {}
+		_SnowNormal("Snow Normal (A)", 2D) = "bump" {}
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
+		_KeepShape("Keep Shape", Range(0.0,1.0)) = 0.8
 	}
 		SubShader{
 			Tags { "RenderType" = "Opaque" }
@@ -47,11 +48,12 @@
 			sampler2D _Snow;
 			sampler2D _SnowNormal;
 			float _Threshold;
+			float _KeepShape;
 
 			void disp(inout appdata v) {
 				float d = tex2Dlod(_DispTex, float4(v.texcoord.xy * _DispTex_ST.xy + _DispTex_ST.zw,0,0)).r;
 				if (d < _Threshold)
-					d = _Threshold;
+					d += (_Threshold - d) * _KeepShape;
 				d = d *  _Displacement * 0.5 - 0.5 + _DispOffset;
 				v.vertex.xyz += v.normal * d;
 			}
