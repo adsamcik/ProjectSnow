@@ -81,7 +81,7 @@
 
 				float a = tex2D(_DispTex, IN.uv_MainTex).r;
 				float diff = _Threshold * 1.1 - a;
-				float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
+				//float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
 				if (diff >= 0 && _Threshold != 0) {
 					a += _Threshold / 2;
 					a = a < 1 ? a : 1;
