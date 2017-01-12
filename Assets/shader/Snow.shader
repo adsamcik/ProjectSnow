@@ -42,6 +42,10 @@ Shader "Snow/Snow" {
 				INTERNAL_DATA
 			};
 
+			float3 normalize(float3 v) {
+				return rsqrt(dot(v, v))*v;
+			}
+
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				//fixed4 c = tex2D(_MainTex, IN.uv_MainTex) + tex2D(_MainTex, IN.uv_MainTex) * _Color;
@@ -51,32 +55,34 @@ Shader "Snow/Snow" {
 				o.Smoothness = c.a;
 				o.Normal = UnpackNormal(tex2D(_MainTexNormal, IN.uv_Normal));
 				o.Metallic = o.Normal.r;
-				float3 wn = WorldNormalVector(IN, float3(0, 0, 1));
+				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
 				float a = h.r;
 				float diff = _Threshold * 1.1 - a;
-				if (diff >= 0 && _Threshold != 0 && wn.y >= 0.25) {
-					float modifier = (wn.y <= 0.5) ? (wn.y - 0.25) * 4 : 1;
-					a += _Threshold / 2;
-					a = a < 1 ? a : 1;
-					diff *= modifier;
+				if (diff >= 0 && _Threshold != 0 && wn.y >= 0.2) {
+					if (wn.y <= 0.7)
+						diff *= (wn.y - 0.2)*2 * 4;
+					else
+						diff *= 4;
+
 					if (diff > 0) {
 						float lerpValue;
 						if (_Threshold >= 0.75) {
 							float val = 1 + (_Threshold - 0.75) * 4;
-							lerpValue = (diff * 4)*val*val;
+							lerpValue = diff*val*val;
 						} else
-							lerpValue = diff * 4;
+							lerpValue = diff;
+
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
-						o.Metallic = lerp(o.Metallic, 1, lerpValue);
+						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
-						o.Smoothness = 1;
-						o.Metallic = 1;
+						o.Smoothness = 0;
+						o.Metallic = 0;
 					}
 				} else {
 					o.Albedo = c.rgb;
