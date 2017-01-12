@@ -80,7 +80,7 @@
 				float a = tex2D(_DispTex, IN.uv_MainTex).r;
 				float diff = _Threshold - a;
 				float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
-				if (diff >= 0) {
+				if (diff >= 0 && _Threshold != 0) {
 					a += _Threshold / 2;
 					a = a < 1 ? a : 1;
 					/*if (wn.y == 0) {
@@ -90,22 +90,24 @@
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = 0;
-					} else*/ if (diff > 0) {
+					} else*/ if (diff > 0 && _Threshold != 1) {
+						float lerpValue;
 						if (_Threshold >= 0.75) {
-							float val = 0.25 * (_Threshold - 0.75) * 4;
-							if (diff < val)
-								diff = val;
-						}
-						float lerpValue = (diff * 4);
+							float val = 1 + (_Threshold - 0.75) * 4;
+							lerpValue = (diff * 4)*val*val;
+						} else
+							lerpValue = diff * 4;
 						if (lerpValue > 1)
 							lerpValue = 1;
-						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
+						o.Albedo = lerp(o.Albedo, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
 						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
+						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
 						o.Smoothness = 0;
+						o.Metallic = 0;
 					}
 				}
 			}
