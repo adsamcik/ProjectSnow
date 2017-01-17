@@ -5,8 +5,8 @@ Shader "Snow/Snow" {
 	Properties{
 		_Color("Color", Color) = (1,1,1,1)
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
-		_MainTexNormal("Normal (A)", 2D) = "bump" {}
-		_HeightMap("_HeightMap", 2D) = "height" {}
+		_BumpMap("Normal Map", 2D) = "bump" {}
+		_ParallaxMap("Height Map", 2D) = "height" {}
 		_Snow("Snow", 2D) = "white" {}
 		_SnowNormal("SnowNormal (A)", 2D) = "bump" {}
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
@@ -26,8 +26,8 @@ Shader "Snow/Snow" {
 			#define snowNormal tex2D(_SnowNormal, IN.uv_MainTex)
 
 			sampler2D _MainTex;
-			sampler2D _MainTexNormal;
-			sampler2D _HeightMap;
+			sampler2D _BumpMap;
+			sampler2D _ParallaxMap;
 			sampler2D _Snow;
 			sampler2D _SnowNormal;
 
@@ -51,10 +51,10 @@ Shader "Snow/Snow" {
 				//fixed4 c = tex2D(_MainTex, IN.uv_MainTex) + tex2D(_MainTex, IN.uv_MainTex) * _Color;
 				//o.Albedo = c.rgb;
 				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
-				fixed4 h = tex2D(_HeightMap, IN.uv_MainTex);
+				fixed4 h = tex2D(_ParallaxMap, IN.uv_MainTex);
 				o.Smoothness = c.a;
-				o.Normal = UnpackNormal(tex2D(_MainTexNormal, IN.uv_Normal));
-				o.Metallic = o.Normal.r;
+				o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_Normal));
+				//o.Metallic = o.Normal.r;
 				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
 				float a = h.r;
 				float diff = _Threshold * 1.1 - a;
@@ -75,14 +75,15 @@ Shader "Snow/Snow" {
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
-						o.Metallic = lerp(o.Metallic, o.Normal.b, lerpValue);
+						//o.Normal = lerp(o.Normal, snowNormal, lerpValue);
+						o.Normal = snowNormal;
+						//o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
+						//o.Metallic = lerp(o.Metallic, o.Normal.bheh, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
-						o.Smoothness = 0;
-						o.Metallic = 0;
+						//o.Smoothness = 0;
+						//o.Metallic = 0;
 					}
 				} else {
 					o.Albedo = c.rgb;
