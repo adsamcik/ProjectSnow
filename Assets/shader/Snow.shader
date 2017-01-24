@@ -61,17 +61,19 @@ Shader "Snow/Basic" {
 				o.Normal = tex2D(_BumpMap, IN.uv_Normal);
 				o.Smoothness = _Smoothness;
 				o.Metallic = _Metalic;
+				o.Albedo = c.rgb;
 				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
-				float a = h.r;
 				float thld = _LowerThreshold + _Threshold * (_UpperThreshold - _LowerThreshold);
-				float diff = thld * 1.1 - a;
-				if (diff >= 0 && thld != 0 && wn.y >= 0.2) {
-					if (wn.y <= 0.7)
-						diff *= (wn.y - 0.2) * 2 * 4;
-					else
-						diff *= 4;
+				float diff = thld - h.r;
+				if (diff >= 0 && thld != 0 && wn.y >= 0.1) {
+					if (wn.y <= 0.6) {
+						diff = diff - (1-((wn.y - 0.1) * 2));
+						if (diff < 0)
+							return;
+					}
+					diff *= 4;
 
-					if (diff > 0) {
+					if (diff > 0 && diff < 1) {
 						float lerpValue;
 						if (thld >= 0.75) {
 							float val = 1 + (thld - 0.75) * 4;
@@ -83,17 +85,15 @@ Shader "Snow/Basic" {
 							lerpValue = 1;
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						//o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Normal = snowNormal;
-						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
+						o.Normal = snowNormal.rgb;
+						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
-						o.Normal = snowNormal;
+						o.Normal = snowNormal.rgb;
 						o.Smoothness = 1;
 						o.Metallic = 0;
 					}
-				} else {
-					o.Albedo = c.rgb;
 				}
 			}
 
