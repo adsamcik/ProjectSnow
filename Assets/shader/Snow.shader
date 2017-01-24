@@ -4,13 +4,14 @@ Shader "Snow/Basic" {
 
 	Properties{
 		_Color("Color", Color) = (1,1,1,1)
-		_MainTex("Albedo (RGB)", 2D) = "white" {}
+		_MainTex("Albedo", 2D) = "white" {}
 		_Glossiness("Smoothness", Range(0.0,1.0)) = 0
 		_Metallic("Metalic", Range(0.0,1.0)) = 0
+		_MetallicGlossMap("Metallic", 2D) = "white" {}
 		_BumpMap("Normal Map", 2D) = "bump" {}
 		_ParallaxMap("Height Map", 2D) = "height" {}
 		_SnowTex("Snow", 2D) = "white" {}
-		_SnowBumpMap("SnowNormal (A)", 2D) = "bump" {}
+		_SnowBumpMap("SnowNormal", 2D) = "bump" {}
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
 		_LowerThreshold("Lower threshold", Range(0.0,1.0)) = 0
 		_UpperThreshold("Upper threshold", Range(0.0,1.0)) = 1
