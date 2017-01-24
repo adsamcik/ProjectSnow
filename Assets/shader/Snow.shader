@@ -6,7 +6,7 @@ Shader "Snow/Basic" {
 		_Color("Color", Color) = (1,1,1,1)
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness("Smoothness", Range(0.0,1.0)) = 0
-		_MetallicGlossMap("Metalic", Range(0.0,1.0)) = 0
+		_Metallic("Metalic", Range(0.0,1.0)) = 0
 		_BumpMap("Normal Map", 2D) = "bump" {}
 		_ParallaxMap("Height Map", 2D) = "height" {}
 		_SnowTex("Snow", 2D) = "white" {}
@@ -39,7 +39,7 @@ Shader "Snow/Basic" {
 
 			float _Threshold, _LowerThreshold, _UpperThreshold;
 			float _Glossiness;
-			float _MetallicGlossMap;
+			float _Metallic;
 
 			struct Input {
 				float2 uv_MainTex;
@@ -60,7 +60,7 @@ Shader "Snow/Basic" {
 				fixed4 h = tex2D(_ParallaxMap, IN.uv_MainTex);
 				o.Normal = tex2D(_BumpMap, IN.uv_Normal);
 				o.Smoothness = _Glossiness;
-				o.Metallic = _MetallicGlossMap;
+				o.Metallic = _Metallic;
 				o.Albedo = c.rgb;
 				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
 				float thld = _LowerThreshold + _Threshold * (_UpperThreshold - _LowerThreshold);
