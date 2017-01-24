@@ -70,7 +70,7 @@
 			float _GlossPow;
 
 			#define snowTex tex2D(_Snow, IN.uv_MainTex)
-			#define snowNormal tex2D(_SnowNormal, IN.uv_MainTex)
+			#define snowNormal UnpackNormal(tex2D(_SnowNormal, IN.uv_MainTex))
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				half4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
