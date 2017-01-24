@@ -1,4 +1,4 @@
-﻿Shader "Custom/SnowTerrain" {
+﻿Shader "Snow/Terrain" {
 	Properties{
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
 		_Snow("Snow", 2D) = "white" {}
