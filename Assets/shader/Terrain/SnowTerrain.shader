@@ -83,8 +83,8 @@
 					o.Albedo = mixedDiffuse.rgb;
 					o.Smoothness = mixedDiffuse.a;
 				} else {
-					half4 snow = tex2D(_Snow, IN.uv_Snow);
-					half4 snowNormal = tex2D(_SnowNormal, IN.uv_Snow);
+					half3 snow = tex2D(_Snow, IN.uv_Snow);
+					half3 snowNormal = UnpackNormal(tex2D(_SnowNormal, IN.uv_Snow));
 					a += _Threshold / 2;
 					a = a < 1 ? a : 1;
 					if (ny <= 0.5) {
@@ -92,7 +92,7 @@
 							diff = -0.25;
 						float lerpValue = (ny - 0.3) * 5 * (-diff * 4);
 						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
+						o.Normal = lerp(o.Normal, snowNormal.rgb, lerpValue);
 						o.Smoothness = 0;
 					} else if (diff > -0.25) {
 						if (_Threshold >= 0.75) {
@@ -104,11 +104,11 @@
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
+						o.Normal = lerp(o.Normal, snowNormal.rgb, lerpValue);
 						o.Smoothness = lerp(mixedDiffuse.a, 0, lerpValue);
 					} else {
-						o.Albedo = snow;
-						o.Normal = snowNormal;
+						o.Albedo = snow.rgb;
+						o.Normal = snowNormal.rgb;
 						o.Smoothness = 0;
 					}
 				}
