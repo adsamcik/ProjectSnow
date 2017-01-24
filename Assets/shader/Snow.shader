@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-Shader "Snow/Basic" {
+﻿Shader "Snow/Standard" {
 
 	Properties{
 		_Color("Color", Color) = (1,1,1,1)
