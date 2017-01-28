@@ -64,8 +64,8 @@
 			sampler2D _SnowTex;
 			sampler2D _SnowBumpMap;
 
-#define snowTex tex2D(_SnowTex, IN.uv_Splat0)
-#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_Splat0))
+#define snowTex tex2D(_SnowTex, IN.uv_SnowTex)
+#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_SnowTex))
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				half4 splat_control;

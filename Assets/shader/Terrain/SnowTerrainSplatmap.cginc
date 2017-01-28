@@ -3,7 +3,7 @@
 
 struct Input
 {
-	float2 uv_Snow : TEXCOORD0;
+	float2 uv_SnowTex;
 	float2 uv_Splat0 : TEXCOORD0;
 	float2 uv_Splat1 : TEXCOORD1;
 	float2 uv_Splat2 : TEXCOORD2;
