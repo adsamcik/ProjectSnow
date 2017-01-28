@@ -82,7 +82,7 @@
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
+						o.Normal = lerp(o.Normal.rgb, snowNormal.rgb, lerpValue);
 						//o.Normal = snowNormal.rgb;
 						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
