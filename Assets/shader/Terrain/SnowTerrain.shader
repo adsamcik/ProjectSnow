@@ -1,8 +1,8 @@
 ﻿Shader "Snow/Terrain" {
 	Properties{
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
-		_Snow("Snow", 2D) = "white" {}
-		_SnowNormal("Snow Normal", 2D) = "bump" {}
+		_SnowTex("Snow", 2D) = "white" {}
+		_SnowBumpMap("Snow Normal", 2D) = "bump" {}
 		// set by terrain engine
 		[HideInInspector] _Control("Control (RGBA)", 2D) = "red" {}
 		[HideInInspector] _Splat3("Layer 3 (A)", 2D) = "white" {}
@@ -23,7 +23,7 @@
 		[HideInInspector] _Smoothness3("Smoothness 3", Range(0.0, 1.0)) = 1.0
 
 			// used in fallback on old cards & base map
-			[HideInInspector] _MainTex("BaseMap (RGB)", 2D) = "white" {}
+		[HideInInspector] _MainTex("BaseMap (RGB)", 2D) = "white" {}
 		[HideInInspector] _Color("Main Color", Color) = (1,1,1,1)
 	}
 
@@ -61,8 +61,11 @@
 
 			float _Threshold;
 
-			sampler2D _Snow;
-			sampler2D _SnowNormal;
+			sampler2D _SnowTex;
+			sampler2D _SnowBumpMap;
+
+#define snowTex tex2D(_SnowTex, IN.uv_Splat0)
+#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_Splat0))
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				half4 splat_control;
@@ -70,55 +73,49 @@
 				fixed4 mixedDiffuse;
 				half4 defaultSmoothness = half4(_Smoothness0, _Smoothness1, _Smoothness2, _Smoothness3);
 				SplatmapMix(IN, defaultSmoothness, splat_control, weight, mixedDiffuse, o.Normal);
-				//o.Albedo = mixedDiffuse.rgb;
+				o.Albedo = mixedDiffuse.rgb;
 				o.Alpha = weight;
 				o.Metallic = dot(splat_control, half4(_Metallic0, _Metallic1, _Metallic2, _Metallic3));
-				float3 wn = WorldNormalVector(IN, float3(0, 0, 1));
-				float ny = wn.y;
+				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
+				float diff = _Threshold - mixedDiffuse.r;
+				if (diff >= 0 && _Threshold != 0 && wn.y >= 0.1) {
+					if (wn.y <= 0.6) {
+						diff = diff - (1 - ((wn.y - 0.1) * 2));
+						if (diff < 0)
+							return;
+					}
+					diff *= 4;
 
-				float a = 1 - mixedDiffuse.a;
-
-				float diff = 1 - _Threshold - a;
-				if (diff >= 0 || ny < 0.3) {
-					o.Albedo = mixedDiffuse.rgb;
-					o.Smoothness = mixedDiffuse.a;
-				} else {
-					half3 snow = tex2D(_Snow, IN.uv_Snow);
-					half3 snowNormal = UnpackNormal(tex2D(_SnowNormal, IN.uv_Snow));
-					a += _Threshold / 2;
-					a = a < 1 ? a : 1;
-					if (ny <= 0.5) {
-						if (diff < -0.25)
-							diff = -0.25;
-						float lerpValue = (ny - 0.3) * 5 * (-diff * 4);
-						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal.rgb, lerpValue);
-						o.Smoothness = 0;
-					} else if (diff > -0.25) {
+					if (diff > 0 && diff < 1) {
+						float lerpValue;
 						if (_Threshold >= 0.75) {
-							float val = -0.25 * (_Threshold - 0.75) * 4;
-							if (diff > val)
-								diff = val;
-						}
-						float lerpValue = -(diff * 4);
+							float val = 1 + (_Threshold - 0.75) * 4;
+							lerpValue = diff*val*val;
+						} else
+							lerpValue = diff;
+
 						if (lerpValue > 1)
 							lerpValue = 1;
-						o.Albedo = lerp(mixedDiffuse.rgb, snow, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal.rgb, lerpValue);
-						o.Smoothness = lerp(mixedDiffuse.a, 0, lerpValue);
+						o.Albedo = lerp(o.Albedo.rgb, snowTex.rgb, lerpValue);
+						o.Normal = lerp(o.Normal.rgb, snowNormal.rgb, lerpValue);
+						//o.Normal = snowNormal.rgb;
+						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
+						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
-						o.Albedo = snow.rgb;
+						o.Albedo = snowTex.rgb;
 						o.Normal = snowNormal.rgb;
-						o.Smoothness = 0;
+						o.Smoothness = 1;
+						o.Metallic = 0;
 					}
 				}
+
 			}
 
 			ENDCG
 		}
 
 			Dependency "AddPassShader" = "Hidden/TerrainEngine/Splatmap/Standard-AddPass"
-				Dependency "BaseMapShader" = "Hidden/TerrainEngine/Splatmap/Standard-Base"
+			Dependency "BaseMapShader" = "Hidden/TerrainEngine/Splatmap/Standard-Base"
 
-				Fallback "Nature/Terrain/Diffuse"
+			Fallback "Nature/Terrain/Diffuse"
 }
