@@ -1,4 +1,6 @@
-﻿Shader "Snow/Tessellation" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+Shader "Snow/Tessellation" {
 	Properties{
 		_Tess("Tessellation", Range(1,32)) = 4
 		_MainTex("Base (RGB)", 2D) = "white" {}
@@ -13,6 +15,8 @@
 		_SnowNormal("Snow Normal (A)", 2D) = "bump" {}
 		_Threshold("Threshold", Range(0.0,1.0)) = 0.3
 		_KeepShape("Keep Shape", Range(0.0,1.0)) = 0.8
+		_LowerThreshold("Lower threshold", Range(0.0,1.0)) = 0
+		_UpperThreshold("Upper threshold", Range(0.0,1.0)) = 1
 	}
 		SubShader{
 			Tags { "RenderType" = "Opaque" }
@@ -47,19 +51,22 @@
 
 			sampler2D _Snow;
 			sampler2D _SnowNormal;
-			float _Threshold;
+			float _Threshold, _LowerThreshold, _UpperThreshold;
 			float _KeepShape;
 
 			void disp(inout appdata v) {
 				float d = tex2Dlod(_DispTex, float4(v.texcoord.xy * _DispTex_ST.xy + _DispTex_ST.zw,0,0)).r;
-				if (d < _Threshold)
-					d += (_Threshold - d) * _KeepShape;
+				float WNY = mul(unity_ObjectToWorld, float4(v.normal, 0.0)).y;
+				float thld = _LowerThreshold + _Threshold * (_UpperThreshold - _LowerThreshold) - 0.1;
+				if (d < thld  && WNY >= 0.1)
+					d += (thld - d) * _KeepShape * WNY;
 				d = d *  _Displacement * 0.5 - 0.5 + _DispOffset;
 				v.vertex.xyz += v.normal * d;
 			}
 
 			struct Input {
 				float2 uv_MainTex;
+				float3 worldNormal;
 				INTERNAL_DATA
 			};
 
@@ -74,41 +81,41 @@
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				half4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+				half3 h = tex2D(_DispTex, IN.uv_MainTex);
 				o.Albedo = c.rgb;
 				o.Metallic = _SpecPow;
 				o.Smoothness = _GlossPow;
 				o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_MainTex));
+				float3 wn = normalize(WorldNormalVector(IN, float3(0, 0, 1)));
+				float thld = _LowerThreshold + _Threshold * (_UpperThreshold - _LowerThreshold);
+				float diff = thld - h.r;
+				if (diff >= 0 && thld != 0 && wn.y >= 0.1) {
+					if (wn.y <= 0.6) {
+						diff = diff - (1 - ((wn.y - 0.1) * 2));
+						if (diff < 0)
+							return;
+					}
+					diff *= 4;
 
-				float a = tex2D(_DispTex, IN.uv_MainTex).r;
-				float diff = _Threshold * 1.1 - a;
-				//float3 worldNormal = WorldNormalVector(IN, float3(0, 1, 0));
-				if (diff >= 0 && _Threshold != 0) {
-					a += _Threshold / 2;
-					a = a < 1 ? a : 1;
-					/*if (wn.y == 0) {
-						if (diff < -0.25)
-							diff = -0.25;
-						float lerpValue = (wn.y - 0.3) * 5 * (-diff * 4);
-						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
-						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Smoothness = 0;
-					} else*/ if (diff > 0) {
+					if (diff > 0 && diff < 1) {
 						float lerpValue;
-						if (_Threshold >= 0.75) {
-							float val = 1 + (_Threshold - 0.75) * 4;
-							lerpValue = (diff * 4)*val*val;
+						if (thld >= 0.75) {
+							float val = 1 + (thld - 0.75) * 4;
+							lerpValue = diff*val*val;
 						} else
-							lerpValue = diff * 4;
+							lerpValue = diff;
+
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(o.Albedo, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal, snowNormal, lerpValue);
-						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
+						//o.Normal = snowNormal.rgb;
+						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
-						o.Smoothness = 0;
+						o.Smoothness = 1;
 						o.Metallic = 0;
 					}
 				}
