@@ -74,8 +74,8 @@
 
 					if (diff > 0 && diff < 1) {
 						float lerpValue;
-						if (thld >= 0.75) {
-							float val = 1 + (thld - 0.75) * 4;
+						if (thld >= 0.5) {
+							float val = 1 + (thld - 0.5) * 2;
 							lerpValue = diff*val*val;
 						} else
 							lerpValue = diff;
@@ -85,12 +85,12 @@
 						o.Albedo = lerp(c.rgb, snowTex, lerpValue);
 						o.Normal = lerp(o.Normal.rgb, snowNormal.rgb, lerpValue);
 						//o.Normal = snowNormal.rgb;
-						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
+						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
 						o.Normal = snowNormal;
-						o.Smoothness = 1;
+						o.Smoothness = 0;
 						o.Metallic = 0;
 					}
 				}

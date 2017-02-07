@@ -118,12 +118,12 @@
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(o.Albedo.rgb, snowTex.rgb, lerpValue);
-						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
+						o.Smoothness = lerp(o.Smoothness, 0, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex.rgb;
 						o.Normal = snowNormal;
-						o.Smoothness = 1;
+						o.Smoothness = 0;
 						o.Metallic = 0;
 					}
 				}
