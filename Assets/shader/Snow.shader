@@ -26,8 +26,8 @@
 			// Use shader model 3.0 target, to get nicer looking lighting
 			#pragma target 3.0
 
-			#define snowTex tex2D(_SnowTex, IN.uv_MainTex)
-			#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_MainTex))
+			#define snowTex tex2D(_SnowTex, IN.uv_SnowTex)
+			#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_SnowTex))
 
 			sampler2D _MainTex;
 			sampler2D _BumpMap;
@@ -44,6 +44,7 @@
 
 			struct Input {
 				float2 uv_MainTex;
+				float2 uv_SnowTex;
 				float3 worldNormal;
 				INTERNAL_DATA
 			};
@@ -88,7 +89,7 @@
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex;
-						o.Normal = snowNormal.rgb;
+						o.Normal = snowNormal;
 						o.Smoothness = 1;
 						o.Metallic = 0;
 					}
