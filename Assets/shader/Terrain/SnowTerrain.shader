@@ -49,6 +49,7 @@
 		#include "SnowTerrainSplatmap.cginc"
 
 
+
 			half _Metallic0;
 			half _Metallic1;
 			half _Metallic2;
@@ -64,8 +65,28 @@
 			sampler2D _SnowTex;
 			sampler2D _SnowBumpMap;
 
-#define snowTex tex2D(_SnowTex, IN.uv_SnowTex)
-#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, IN.uv_SnowTex))
+			void SplatmapVert(inout appdata_full v, out Input data) {
+				/*float sqrtNormal = v.normal.y*v.normal.y;
+				if (_Threshold > 0.6) {
+					half val = (_Threshold - 0.6) / 2 * (sqrtNormal) * 5;
+					v.vertex.y += val;
+				}*/
+
+				UNITY_INITIALIZE_OUTPUT(Input, data);
+				data.tc_Control = TRANSFORM_TEX(v.texcoord, _Control);	// Need to manually transform uv here, as we choose not to use 'uv' prefix for this texcoord.
+
+				float4 pos = UnityObjectToClipPos(v.vertex);
+				UNITY_TRANSFER_FOG(data, pos);
+
+			#ifdef _TERRAIN_NORMAL_MAP
+				v.tangent.xyz = cross(v.normal, float3(0,0,1));
+				v.tangent.w = -1;
+			#endif
+			}
+
+#define snowUV float2(IN.worldPos.x/10, IN.worldPos.z/10)
+#define snowTex tex2D(_SnowTex, snowUV)
+#define snowNormal UnpackNormal(tex2D(_SnowBumpMap, snowUV))
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				half4 splat_control;
@@ -88,8 +109,8 @@
 
 					if (diff > 0 && diff < 1) {
 						float lerpValue;
-						if (_Threshold >= 0.75) {
-							float val = 1 + (_Threshold - 0.75) * 4;
+						if (_Threshold >= 0.5) {
+							float val = 1 + (_Threshold - 0.5) * 4;
 							lerpValue = diff*val*val;
 						} else
 							lerpValue = diff;
@@ -97,13 +118,11 @@
 						if (lerpValue > 1)
 							lerpValue = 1;
 						o.Albedo = lerp(o.Albedo.rgb, snowTex.rgb, lerpValue);
-						o.Normal = lerp(o.Normal.rgb, snowNormal.rgb, lerpValue);
-						//o.Normal = snowNormal.rgb;
 						o.Smoothness = lerp(o.Smoothness, 1, lerpValue);
 						o.Metallic = lerp(o.Metallic, 0, lerpValue);
 					} else {
 						o.Albedo = snowTex.rgb;
-						o.Normal = snowNormal.rgb;
+						o.Normal = snowNormal;
 						o.Smoothness = 1;
 						o.Metallic = 0;
 					}
@@ -114,8 +133,8 @@
 			ENDCG
 		}
 
-			Dependency "AddPassShader" = "Hidden/TerrainEngine/Splatmap/Standard-AddPass"
-			Dependency "BaseMapShader" = "Hidden/TerrainEngine/Splatmap/Standard-Base"
+			//Dependency "AddPassShader" = "Hidden/TerrainEngine/Splatmap/Standard-AddPass"
+			//Dependency "BaseMapShader" = "Hidden/TerrainEngine/Splatmap/Standard-Base"
 
-			Fallback "Nature/Terrain/Diffuse"
+				Fallback "Nature/Terrain/Diffuse"
 }

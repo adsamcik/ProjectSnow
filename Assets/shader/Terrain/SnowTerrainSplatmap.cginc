@@ -11,6 +11,7 @@ struct Input
 	float2 tc_Control : TEXCOORD4;	// Not prefixing '_Contorl' with 'uv' allows a tighter packing of interpolators, which is necessary to support directional lightmap.
 	UNITY_FOG_COORDS(5)
 	float3 worldNormal;
+	float3 worldPos;
 	INTERNAL_DATA
 };
 
@@ -21,19 +22,6 @@ sampler2D _Splat0,_Splat1,_Splat2,_Splat3;
 #ifdef _TERRAIN_NORMAL_MAP
 	sampler2D _Normal0, _Normal1, _Normal2, _Normal3;
 #endif
-
-void SplatmapVert(inout appdata_full v, out Input data)
-{
-	UNITY_INITIALIZE_OUTPUT(Input, data);
-	data.tc_Control = TRANSFORM_TEX(v.texcoord, _Control);	// Need to manually transform uv here, as we choose not to use 'uv' prefix for this texcoord.
-	float4 pos = UnityObjectToClipPos(v.vertex);
-	UNITY_TRANSFER_FOG(data, pos);
-
-#ifdef _TERRAIN_NORMAL_MAP
-	v.tangent.xyz = cross(v.normal, float3(0,0,1));
-	v.tangent.w = -1;
-#endif
-}
 
 #ifdef TERRAIN_STANDARD_SHADER
 void SplatmapMix(Input IN, half4 defaultAlpha, out half4 splat_control, out half weight, out fixed4 mixedDiffuse, inout fixed3 mixedNormal)
